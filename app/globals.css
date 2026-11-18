@@ -1,26 +1,231 @@
 @import "tailwindcss";
 
+/* Active les variantes dark: par classe (.dark) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Force les contrôles natifs (select, scrollbar) en mode sombre */
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+
+@theme {
+  --color-primary: var(--primary);
+  /* Alias sémantiques pour la vitrine */
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-muted: var(--on-surface-muted);
+  --color-border: var(--border-color);
+}
+
+/* Surfaces adaptées au thème de la boutique */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #3ecf8e;
+  --surface: #ffffff;
+  --surface-muted: #f9fafb;
+  --on-surface: #111827;
+  --on-surface-muted: #6b7280;
+  --border-color: #e5e7eb;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html.dark {
+  --surface: #0f172a;
+  --surface-muted: #1e293b;
+  --on-surface: #f1f5f9;
+  --on-surface-muted: #94a3b8;
+  --border-color: #334155;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Fond body = surface thémée */
+body {
+  background-color: var(--surface);
+  color: var(--on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================================
+   ANIMATIONS — Quick wins Phase 7.5
+   ============================================================================ */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.animate-fade-in-up {
+  animation: fade-in-up 400ms ease-out both;
+}
+
+/* Skeleton pulse pour loading.tsx */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* Respecte la préférence de réduction de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-skeleton {
+    animation: none;
+  }
+}
+
+/* Utilitaire : masquer la scrollbar (carrousels horizontaux) */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   MICRO-INTERACTIONS — Phase 7.6
+   ============================================================================ */
+
+/* --- Underline animé sur les liens -------------------------------------- */
+/* L'underline s'étend de gauche à droite au survol, se rétracte en sens
+   inverse au retrait. Pur CSS, aucune dépendance JS. */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size 300ms ease;
+  text-decoration: none;
+}
+.link-underline:hover,
+.link-underline:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* --- Scroll reveal (CSS moderne) ---------------------------------------- */
+/* Révèle les sections au scroll via `animation-timeline: view()`.
+   Supporté par Chrome/Edge 115+, Safari 26+, Firefox en cours.
+   Fallback gracieux : sans support, la section s'affiche normalement. */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .scroll-reveal {
+    animation: reveal-up linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-reveal {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* --- Hover raffiné sur les boutons -------------------------------------- */
+/* Glow subtil sur le bouton WhatsApp au survol (au lieu d'un simple
+   changement de couleur). Couleur dérivée du vert WhatsApp officiel. */
+.whatsapp-btn {
+  transition: background-color 200ms ease, box-shadow 300ms ease,
+              transform 200ms ease;
+}
+.whatsapp-btn:hover {
+  box-shadow: 0 8px 24px -6px rgba(37, 211, 102, 0.5);
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp-btn:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   HERO — Motif animé (dégradé en mouvement lent) - Phase 7.7
+   ============================================================================ */
+
+@keyframes hero-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary) 15%, transparent) 0%,
+    color-mix(in srgb, var(--primary) 5%, transparent) 50%,
+    var(--surface) 100%
+  );
+  background-size: 200% 200%;
+  animation: hero-shimmer 20s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-gradient {
+    animation: none;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary) 15%, transparent) 0%,
+      var(--surface) 100%
+    );
+  }
+}
+
+/* ============================================================================
+   Animations 
+   ============================================================================ */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in { animation: fade-in 200ms ease-out both; }
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right { animation: slide-in-right 250ms ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in, .animate-slide-in-right { animation: none; }
+}   
+
+/* ============================================================================
+   ACCESSIBILITÉ — Focus visible cohérent
+   ============================================================================ */
+/* Sur les éléments interactifs, on force un anneau visible au focus clavier,
+   même quand Tailwind ne l'ajoute pas nativement. :focus-visible évite
+   d'afficher l'anneau au clic souris. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Ne pas dupliquer l'anneau quand un élément a déjà `focus:ring-*` */
+button.focus\:ring-2:focus-visible,
+input.focus\:ring-2:focus-visible,
+textarea.focus\:ring-2:focus-visible,
+select.focus\:ring-2:focus-visible {
+  outline: none;
 }
